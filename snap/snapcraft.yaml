@@ -1,0 +1,78 @@
+name: denaro # you probably want to 'snapcraft register <name>'
+base: core22 # the base snap is the execution environment for this snap
+adopt-info: denaro
+source-code: https://github.com/nlogozzo/NickvisionMoney
+issues: https://github.com/nlogozzo/NickvisionMoney/issues
+grade: stable # must be 'stable' to release into candidate/stable channels
+confinement: strict # use 'strict' once you have the right plugs and slots
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+  - build-on: armhf
+
+layout:
+  /usr/bin/yelp:
+    symlink: $SNAP/usr/bin/yelp
+parts:
+  denaro:
+    # See 'snapcraft plugins'
+    plugin: nil
+    source: https://github.com/NickvisionApps/Denaro.git
+    #source-branch: snap
+    parse-info: [ usr/share/metainfo/org.nickvision.money.metainfo.xml ]
+    build-environment:
+      - DOTNET_CLI_TELEMETRY_OPTOUT: 1
+    build-packages:
+      - blueprint-compiler
+      - wget
+    override-pull: |
+      craftctl default
+      wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+      chmod +x ./dotnet-install.sh
+      ./dotnet-install.sh --channel 7.0
+      patch -p1 < $CRAFT_PROJECT_DIR/snap/denaro.patch
+    override-build: |
+      export DOTNET_ROOT=$HOME/.dotnet
+      export PATH=$PATH:$HOME/.dotnet:$HOME/.dotnet/tools:$HOME/.cargo/bin
+      cd $CRAFT_PART_SRC
+      echo j
+      dotnet tool restore
+      dotnet cake --target=Publish --prefix=/snap/denaro/current/usr --ui=gnome --self-contained
+      dotnet cake --target=Install --destdir=$CRAFT_PART_INSTALL
+      mkdir -p $CRAFT_PART_INSTALL/meta/gui
+      cp -r $CRAFT_PART_INSTALL/snap/denaro/current/usr/share/icons $CRAFT_PART_INSTALL/meta/gui/
+      for i in `find $CRAFT_PART_INSTALL/meta/gui/icons -name "*.svg" -o -name "*.png"`; do
+        mv $i "`dirname $i`/snap.$CRAFT_PROJECT_NAME.`basename $i`"
+      done
+    organize:
+      snap/denaro/current: .
+
+  yelp:
+    plugin: nil
+    stage-packages:
+      - yelp
+      - libyelp0
+    prime:
+      - usr/lib/$CRAFT_ARCH_TRIPLET/libyelp.so.0
+      - usr/lib/$CRAFT_ARCH_TRIPLET/libyelp.so.0.0.0
+      - usr/lib/$CRAFT_ARCH_TRIPLET/yelp/web-extensions/libyelpwebextension.so
+      - usr/bin/gnome-help
+      - usr/bin/yelp
+
+slots:
+  denaro:
+    interface: dbus
+    bus: session
+    name: org.nickvision.denaro
+  yelp:
+    interface: dbus
+    bus: session
+    name: org.gnome.Yelp
+
+apps:
+  denaro:
+    command: usr/bin/org.nickvision.money
+    extensions: [gnome]
+    common-id: org.nickvision.money
+    plugs:
+      - home
