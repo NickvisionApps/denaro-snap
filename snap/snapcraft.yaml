@@ -10,15 +10,13 @@ architectures:
   - build-on: arm64
   - build-on: armhf
 
-layout:
-  /usr/bin/yelp:
-    symlink: $SNAP/usr/bin/yelp
 parts:
   denaro:
     # See 'snapcraft plugins'
     plugin: nil
     source: https://github.com/NickvisionApps/Denaro.git
-    #source-branch: snap
+    source-tag: '2023.6.2'
+    source-depth: 1
     parse-info: [ usr/share/metainfo/org.nickvision.money.metainfo.xml ]
     build-environment:
       - DOTNET_CLI_TELEMETRY_OPTOUT: 1
@@ -35,7 +33,6 @@ parts:
       export DOTNET_ROOT=$HOME/.dotnet
       export PATH=$PATH:$HOME/.dotnet:$HOME/.dotnet/tools:$HOME/.cargo/bin
       cd $CRAFT_PART_SRC
-      echo j
       dotnet tool restore
       dotnet cake --target=Publish --prefix=/snap/denaro/current/usr --ui=gnome --self-contained
       dotnet cake --target=Install --destdir=$CRAFT_PART_INSTALL
@@ -46,28 +43,15 @@ parts:
       done
     organize:
       snap/denaro/current: .
-
-  yelp:
-    plugin: nil
-    stage-packages:
-      - yelp
-      - libyelp0
     prime:
-      - usr/lib/$CRAFT_ARCH_TRIPLET/libyelp.so.0
-      - usr/lib/$CRAFT_ARCH_TRIPLET/libyelp.so.0.0.0
-      - usr/lib/$CRAFT_ARCH_TRIPLET/yelp/web-extensions/libyelpwebextension.so
-      - usr/bin/gnome-help
-      - usr/bin/yelp
+      - -snap/current
 
 slots:
   denaro:
     interface: dbus
     bus: session
     name: org.nickvision.denaro
-  yelp:
-    interface: dbus
-    bus: session
-    name: org.gnome.Yelp
+
 
 apps:
   denaro:
