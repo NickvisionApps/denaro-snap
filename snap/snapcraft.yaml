@@ -1,10 +1,12 @@
-name: denaro # you probably want to 'snapcraft register <name>'
-base: core22 # the base snap is the execution environment for this snap
+name: denaro 
+base: core22 
 adopt-info: denaro
 source-code: https://github.com/nlogozzo/NickvisionMoney
 issues: https://github.com/nlogozzo/NickvisionMoney/issues
-grade: stable # must be 'stable' to release into candidate/stable channels
-confinement: strict # use 'strict' once you have the right plugs and slots
+donation: https://github.com/sponsors/nlogozzo
+contact: https://matrix.to/#/#nickvision:matrix.org
+grade: stable 
+confinement: strict 
 architectures:
   - build-on: amd64
   - build-on: arm64
