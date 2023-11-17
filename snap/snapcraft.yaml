@@ -13,23 +13,32 @@ architectures:
   - build-on: armhf
 
 parts:
+  # When the snap of `blueprint-compiler` comes up, we can remove this part upto L21
+  blueprint-compiler:
+    source: https://gitlab.gnome.org/jwestman/blueprint-compiler.git
+    source-tag: 'v0.10.0'
+    plugin: meson
+    meson-parameters:
+      - --prefix=/usr
+    override-prime: ''
   denaro:
-    # See 'snapcraft plugins'
+    after:  # remove this and next line too when the snap of `blueprint-compiler` comes up
+      - blueprint-compiler
     plugin: nil
     source: https://github.com/NickvisionApps/Denaro.git
-    source-tag: '2023.9.2'
+    source-tag: '2023.11.0'
     source-depth: 1
     parse-info: [ usr/share/metainfo/org.nickvision.money.metainfo.xml ]
     build-environment:
       - DOTNET_CLI_TELEMETRY_OPTOUT: 1
     build-packages:
-      - blueprint-compiler
+#      - blueprint-compiler
       - wget
     override-pull: |
       craftctl default
       wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
       chmod +x ./dotnet-install.sh
-      ./dotnet-install.sh --channel 7.0
+      ./dotnet-install.sh --channel 8.0
       patch -p1 < $CRAFT_PROJECT_DIR/snap/denaro.patch
     override-build: |
       export DOTNET_ROOT=$HOME/.dotnet
